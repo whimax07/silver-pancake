@@ -7,8 +7,7 @@ import logging
 import re
 from collections import OrderedDict
 
-from pytube import request
-from pytube.__main__ import YouTube
+from Code_Base import request
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +110,7 @@ class Playlist(object):
             start, stop, step = (1, len(self.video_urls) + 1, 1)
         return (str(i).zfill(digits) for i in range(start, stop, step))
 
-    def download_all(
+    def Playlist_all(
         self, download_path=None, prefix_number=True,
         reverse_numbering=False,
     ):
@@ -136,22 +135,4 @@ class Playlist(object):
 
         self.populate_video_urls()
         logger.debug('total videos found: %d', len(self.video_urls))
-        logger.debug('starting download')
-
         prefix_gen = self._path_num_prefix_generator(reverse_numbering)
-
-        for link in self.video_urls:
-            yt = YouTube(link)
-            # TODO: this should not be hardcoded to a single user's preference
-            dl_stream = yt.streams.filter(
-                progressive=True, subtype='mp4',
-            ).order_by('resolution').desc().first()
-
-            logger.debug('download path: %s', download_path)
-            if prefix_number:
-                prefix = next(prefix_gen)
-                logger.debug('file prefix is: %s', prefix)
-                dl_stream.download(download_path, filename_prefix=prefix)
-            else:
-                dl_stream.download(download_path)
-            logger.debug('download complete')
