@@ -12,17 +12,18 @@ from __future__ import absolute_import
 import json
 import logging
 
-from pytube import Caption
-from pytube import CaptionQuery
-from pytube import extract
-from pytube import mixins
-from pytube import request
-from pytube import Stream
-from pytube import StreamQuery
-from pytube.compat import install_proxy
-from pytube.compat import parse_qsl
-from pytube.exceptions import VideoUnavailable
-from pytube.helpers import apply_mixin
+from Code_Base import request
+
+# from pytube import extract
+# from pytube import mixins
+# from pytube import Stream
+# from pytube import StreamQuery
+
+from Code_Base.compat import install_proxy
+from Code_Base.compat import parse_qsl
+
+# from pytube.exceptions import VideoUnavailable
+# from pytube.helpers import apply_mixin
 
 logger = logging.getLogger(__name__)
 
@@ -141,11 +142,6 @@ class YouTube(object):
             # build instances of :class:`Stream <Stream>`
             self.initialize_stream_objects(fmt)
 
-        # load the player_response object (contains subtitle information)
-        apply_mixin(self.player_config_args, 'player_response', json.loads)
-
-        self.initialize_caption_objects()
-        logger.info('init finished successfully')
 
     def prefetch(self):
         """Eagerly download all necessary data.
@@ -157,11 +153,11 @@ class YouTube(object):
         :rtype: None
 
         """
-        self.watch_html = request.get(url=self.watch_url)
-        if '<img class="icon meh" src="/yts/img' not in self.watch_html:
-            raise VideoUnavailable('This video is unavailable.')
-        self.embed_html = request.get(url=self.embed_url)
-        self.age_restricted = extract.is_age_restricted(self.watch_html)
+        # self.watch_html = request.get(url=self.watch_url)
+        # if '<img class="icon meh" src="/yts/img' not in self.watch_html:
+        #     raise VideoUnavailable('This video is unavailable.')
+        # self.embed_html = request.get(url=self.embed_url)
+        # self.age_restricted = extract.is_age_restricted(self.watch_html)
         self.vid_info_url = extract.video_info_url(
             video_id=self.video_id,
             watch_url=self.watch_url,
@@ -197,35 +193,6 @@ class YouTube(object):
             )
             self.fmt_streams.append(video)
 
-    def initialize_caption_objects(self):
-        """Populate instances of :class:`Caption <Caption>`.
-
-        Take the unscrambled player response data, and use it to initialize
-        instances of :class:`Caption <Caption>`.
-
-        :rtype: None
-
-        """
-        if 'captions' not in self.player_config_args['player_response']:
-            return
-        # https://github.com/nficano/pytube/issues/167
-        caption_tracks = (
-            self.player_config_args
-            .get('player_response', {})
-            .get('captions', {})
-            .get('playerCaptionsTracklistRenderer', {})
-            .get('captionTracks', [])
-        )
-        for caption_track in caption_tracks:
-            self.caption_tracks.append(Caption(caption_track))
-
-    @property
-    def captions(self):
-        """Interface to query caption tracks.
-
-        :rtype: :class:`CaptionQuery <CaptionQuery>`.
-        """
-        return CaptionQuery([c for c in self.caption_tracks])
 
     @property
     def streams(self):
